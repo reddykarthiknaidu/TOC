@@ -1,0 +1,104 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+
+#define MAX_STATES 10
+
+// Structure to represent NFA transitions
+typedef struct {
+    char symbol;  // 'ε' for epsilon transitions
+    int to_state;
+} Transition;
+
+typedef struct {
+    Transition transitions[MAX_STATES];
+    int count;
+} StateTransitions;
+
+// NFA structure
+typedef struct {
+    StateTransitions states[MAX_STATES];
+    int state_count;
+} NFA;
+
+// Initialize NFA
+void initNFA(NFA *nfa) {
+    nfa->state_count = 0;
+    for (int i = 0; i < MAX_STATES; i++) {
+        nfa->states[i].count = 0;
+    }
+}
+
+// Add a transition to NFA
+void addTransition(NFA *nfa, int from, char symbol, int to) {
+    if (from >= MAX_STATES || to >= MAX_STATES || nfa->states[from].count >= MAX_STATES) {
+        printf("Error: Maximum states or transitions exceeded\n");
+        return;
+    }
+    nfa->states[from].transitions[nfa->states[from].count].symbol = symbol;
+    nfa->states[from].transitions[nfa->states[from].count].to_state = to;
+    nfa->states[from].count++;
+}
+
+// Recursive function to find ε-closure for a state
+void findEpsilonClosure(NFA *nfa, int state, bool visited[], bool closure[]) {
+    visited[state] = true;
+    closure[state] = true;
+
+    // Check all transitions from current state
+    for (int i = 0; i < nfa->states[state].count; i++) {
+        if (nfa->states[state].transitions[i].symbol == 'ε') {
+            int next_state = nfa->states[state].transitions[i].to_state;
+            if (!visited[next_state]) {
+                findEpsilonClosure(nfa, next_state, visited, closure);
+            }
+        }
+    }
+}
+
+// Print ε-closure for all states
+void printAllEpsilonClosures(NFA *nfa) {
+    printf("ε-Closures for all states:\n");
+    printf("-------------------------\n");
+
+    for (int i = 0; i < nfa->state_count; i++) {
+        bool visited[MAX_STATES] = {false};
+        bool closure[MAX_STATES] = {false};
+
+        findEpsilonClosure(nfa, i, visited, closure);
+
+        printf("ε-closure(q%d) = { ", i);
+        bool first = true;
+        for (int j = 0; j < nfa->state_count; j++) {
+            if (closure[j]) {
+                if (!first) {
+                    printf(", ");
+                }
+                printf("q%d", j);
+                first = false;
+            }
+        }
+        printf(" }\n");
+    }
+}
+
+int main() {
+    NFA nfa;
+    initNFA(&nfa);
+
+    // Set number of states in the NFA
+    nfa.state_count = 4; // Example with 4 states
+
+    // Add ε-transitions (modify as needed)
+    addTransition(&nfa, 0, 'ε', 1);
+    addTransition(&nfa, 0, 'a', 2);
+    addTransition(&nfa, 1, 'ε', 2);
+    addTransition(&nfa, 1, 'b', 3);
+    addTransition(&nfa, 2, 'ε', 3);
+    addTransition(&nfa, 3, 'a', 0);
+
+    // Print ε-closures for all states
+    printAllEpsilonClosures(&nfa);
+
+    return 0;
+}
