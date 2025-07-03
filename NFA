@@ -1,0 +1,218 @@
+1	+
+#include <stdio.h>
+2	+
+#include <stdlib.h>
+3	+
+#include <stdbool.h>
+4	+
+5	+
+#define MAX_STATES 10
+6	+
+#define MAX_TRANSITIONS 10
+7	+
+8	+
+// Structure to represent NFA states and transitions
+9	+
+typedef struct {
+10	+
+    int state;
+11	+
+    bool isFinal;
+12	+
+} NFAState;
+13	+
+14	+
+typedef struct {
+15	+
+    int from;
+16	+
+    char symbol;  // 'ε' for epsilon transitions
+17	+
+    int to;
+18	+
+} NFATransition;
+19	+
+20	+
+typedef struct {
+21	+
+    NFAState states[MAX_STATES];
+22	+
+    NFATransition transitions[MAX_TRANSITIONS];
+23	+
+    int stateCount;
+24	+
+    int transitionCount;
+25	+
+} NFA;
+26	+
+27	+
+// Function to initialize NFA
+28	+
+void initNFA(NFA *nfa) {
+29	+
+    nfa->stateCount = 0;
+30	+
+    nfa->transitionCount = 0;
+31	+
+}
+32	+
+33	+
+// Function to add a state to NFA
+34	+
+void addState(NFA *nfa, int state, bool isFinal) {
+35	+
+    if (nfa->stateCount < MAX_STATES) {
+36	+
+        nfa->states[nfa->stateCount].state = state;
+37	+
+        nfa->states[nfa->stateCount].isFinal = isFinal;
+38	+
+        nfa->stateCount++;
+39	+
+    }
+40	+
+}
+41	+
+42	+
+// Function to add a transition to NFA
+43	+
+void addTransition(NFA *nfa, int from, char symbol, int to) {
+44	+
+    if (nfa->transitionCount < MAX_TRANSITIONS) {
+45	+
+        nfa->transitions[nfa->transitionCount].from = from;
+46	+
+        nfa->transitions[nfa->transitionCount].symbol = symbol;
+47	+
+        nfa->transitions[nfa->transitionCount].to = to;
+48	+
+        nfa->transitionCount++;
+49	+
+    }
+50	+
+}
+51	+
+52	+
+// Function to find ε-closure for a single state
+53	+
+void findEpsilonClosure(NFA *nfa, int state, bool visited[], bool closure[]) {
+54	+
+    // Mark the current state as visited and in closure
+55	+
+    visited[state] = true;
+56	+
+    closure[state] = true;
+57	+
+58	+
+    // Find all ε-transitions from this state
+59	+
+    for (int i = 0; i < nfa->transitionCount; i++) {
+60	+
+        if (nfa->transitions[i].from == state && nfa->transitions[i].symbol == 'ε') {
+61	+
+            int nextState = nfa->transitions[i].to;
+62	+
+            if (!visited[nextState]) {
+63	+
+                findEpsilonClosure(nfa, nextState, visited, closure);
+64	+
+            }
+65	+
+        }
+66	+
+    }
+67	+
+}
+68	+
+69	+
+// Function to find and print ε-closure for all states
+70	+
+void printAllEpsilonClosures(NFA *nfa) {
+71	+
+    printf("ε-Closures for all states:\n");
+72	+
+    printf("--------------------------\n");
+73	+
+74	+
+    for (int i = 0; i < nfa->stateCount; i++) {
+75	+
+        int state = nfa->states[i].state;
+76	+
+        bool visited[MAX_STATES] = {false};
+77	+
+        bool closure[MAX_STATES] = {false};
+78	+
+79	+
+        findEpsilonClosure(nfa, state, visited, closure);
+80	+
+81	+
+        printf("ε-closure(%d) = { ", state);
+82	+
+        bool first = true;
+83	+
+        for (int j = 0; j < MAX_STATES; j++) {
+84	+
+            if (closure[j]) {
+85	+
+                if (!first) {
+86	+
+                    printf(", ");
+87	+
+                }
+88	+
+                printf("%d", j);
+89	+
+                first = false;
+90	+
+            }
+91	+
+        }
+92	+
+        printf(" }\n");
+93	+
+    }
+94	+
+}
+95	+
+96	+
+int main() {
+97	+
+    NFA nfa;
+98	+
+    initNFA(&nfa);
+99	+
+100	+
+    // Example NFA construction (modify as needed)
+101	+
+    addState(&nfa, 0, false);  // State 0 (initial)
+102	+
+    addState(&nfa, 1, false);  // State 1
+103	+
+    addState(&nfa, 2, true);   // State 2 (final)
+104	+
+    addState(&nfa, 3, false);  // State 3
+105	+
+106	+
+    // Add transitions (including ε-transitions)
+107	+
+    addTransition(&nfa, 0, 'ε', 1);
+108	+
+    addTransition(&nfa, 0, 'a', 2);
+109	+
+    addTransition(&nfa, 1, 'ε', 2);
+110	+
+    addTransition(&nfa, 1, 'b', 3);
+111	+
+    addTransition(&nfa, 2, 'ε', 3);
+112	+
+    addTransition(&nfa, 3, 'a', 0);
+113	+
+114	+
+    // Calculate and print ε-closures for all states
+115	+
+    printAllEpsilonClosures(&nfa);
+116	+
+117	+
+    return 0;
+118	+
+}
